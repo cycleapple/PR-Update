@@ -1,0 +1,48 @@
+name: 'PR Auto Update'
+description: 'Check if branches are up to date and merge the base branch into the pull request branch if necessary.'
+
+inputs:
+  baseBranch:
+    required: true
+    description: 'The base branch to compare and merge.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - uses: fregante/setup-git-user@v2
+
+    - name: Fetch branches and update working directory
+      run: |
+        git fetch origin ${{ github.event.pull_request.head.ref }}
+        git fetch origin ${{ github.event.pull_request.base.ref }}
+
+    - name: Check if branches are up to date
+      id: checkBranches
+      run: |
+        git checkout ${{ github.event.pull_request.head.ref }}
+        BASE=$(git merge-base origin/${{ github.event.pull_request.base.ref }} HEAD)
+        if [ $BASE = $(git rev-parse origin/${{ github.event.pull_request.base.ref }}) ]; then
+          echo "Branches are up to date, skipping merge."
+          echo "::set-output name=mergeRequired::false"
+        else
+          echo "Branches are not up to date, merge is required."
+          echo "::set-output name=mergeRequired::true"
+        fi
+
+    - name: Merge base branch into PR branch
+      if: steps.checkBranches.outputs.mergeRequired == 'true'
+      run: |
+        git merge --no-edit --no-commit origin/${{ github.event.pull_request.base.ref }}
+        if [ $? -ne 0 ]; then
+          echo "Merge conflict detected. Please resolve conflicts before merging."
+          exit 1
+        fi
+        git commit -m "Merge ${{ github.event.pull_request.base.ref }} into ${{ github.event.pull_request.head.ref }}"
+
+    - name: Push changes
+      if: steps.checkBranches.outputs.mergeRequired == 'true'
+      run: |
+        git push origin ${{ github.event.pull_request.head.ref }}
