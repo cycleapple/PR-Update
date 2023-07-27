@@ -46,3 +46,7 @@ runs:
       if: steps.checkBranches.outputs.mergeRequired == 'true'
       run: |
         git push origin ${{ github.event.pull_request.head.ref }}
+
+branding:
+  icon: 'git-pull-request'
+  color: 'blue'
