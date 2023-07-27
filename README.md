@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Merge Base Branch into PR
-        uses: <username>/<repository>/<path-to-action>
+        uses: cycleapple/PR-Update@v1
         with:
           baseBranch: ${{ github.event.pull_request.base.ref }}
 ```
