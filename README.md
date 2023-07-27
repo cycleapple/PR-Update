@@ -1,5 +1,3 @@
-Sure! Here's the README for your custom GitHub Action "Merge Base Branch into PR":
-
 # Merge Base Branch into PR
 
 ## Description
